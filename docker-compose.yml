@@ -51,13 +51,6 @@ services:
     networks:
       - asecx
 
-  cache:
-    image: redis:alpine
-    container_name: asecx-cache
-    restart: unless-stopped
-    networks:
-      - asecx
-
   # Database management with pgAdmin
   pgadmin:
     image: dpage/pgadmin4
