@@ -1,0 +1,85 @@
+version: "3.9"
+
+#Docker Networks
+networks:
+  asecx:
+    name: asecx
+    driver: bridge
+
+services:
+  app:
+    container_name: asecx-app
+    image: asecx/smooht-app:1.0
+    restart: always
+    tty: true
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - postgres
+    networks:
+      - asecx
+
+  postgres:
+    container_name: asecx-db
+    image: postgres:15
+    restart: always
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    networks:
+      - asecx
+
+  web:
+    container_name: asecx-web
+    image: asecx/web_server:1.0
+    restart: always
+    tty: true
+    depends_on:
+      - app
+    ports:
+      - "85:80"
+    networks:
+      - asecx
+
+  cache:
+    image: redis:alpine
+    container_name: asecx-cache
+    restart: unless-stopped
+    networks:
+      - asecx
+
+  # Database management with pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: asecx-pgAdmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - asecx
+
+  # Database management with Adminer
+  adminer:
+    container_name: asecx-adminer
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - asecx
